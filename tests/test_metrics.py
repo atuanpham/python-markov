@@ -236,12 +236,18 @@ class TestModelComplexity:
             calculated_expected = (
                 (n_states - 1) + n_states * (n_states - 1) + n_states * (n_obs - 1)
             )
-            assert (
-                complexity == calculated_expected
-            ), f"Failed for {n_states} states, {n_obs} obs: got {complexity}, expected {calculated_expected}"
-            assert (
-                complexity == expected
-            ), f"Failed for {n_states} states, {n_obs} obs: got {complexity}, expected {expected}"
+
+            assert complexity == calculated_expected, (
+                f"Failed for {n_states} states, "
+                f"{n_obs} obs: got {complexity}, "
+                f"expected {calculated_expected}"
+            )
+
+            assert complexity == expected, (
+                f"Failed for {n_states} states, "
+                f"{n_obs} obs: got {complexity}, "
+                f"expected {expected}"
+            )
 
 
 class TestModelEvaluation:
@@ -395,7 +401,6 @@ class TestMetricsIntegration:
         peaked = np.array([0.7, 0.1, 0.1, 0.1])
 
         # Cross-entropy and KL divergence properties
-        ce_uniform_uniform = compute_cross_entropy(uniform, uniform)
         ce_peaked_uniform = compute_cross_entropy(peaked, uniform)
 
         kl_uniform_uniform = compute_kl_divergence(uniform, uniform)

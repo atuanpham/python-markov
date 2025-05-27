@@ -147,7 +147,6 @@ class TestForwardAlgorithm:
         emission_probs = np.array(
             [[1.0, 0.0], [0.0, 1.0]]  # State 0 always emits 0  # State 1 always emits 1
         )
-        sequence = np.array([0])  # Single observation
 
         log_start_probs = safe_log(start_probs)
         log_transition_probs = safe_log(transition_probs)

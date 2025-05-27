@@ -385,7 +385,7 @@ class TestDiscreteHMMUtilities:
         assert "is_fitted" in params
         assert params["n_states"] == 2
         assert params["n_observations"] == 3
-        assert params["is_fitted"] == False
+        assert params["is_fitted"] is False
 
     def test_get_params_fitted(self, simple_sequences):
         """Test parameter retrieval for fitted model."""
@@ -393,7 +393,7 @@ class TestDiscreteHMMUtilities:
         hmm.fit(simple_sequences, n_iter=5)
 
         params = hmm.get_params()
-        assert params["is_fitted"] == True
+        assert params["is_fitted"] is True
         assert "log_likelihood_history" in params
         assert params["start_probs"] is not None
         assert params["transition_probs"] is not None
