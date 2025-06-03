@@ -6,15 +6,9 @@ from typing import List, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.special import logsumexp
 
-from ..utils.math_utils import (
-    EPSILON,
-    LOG_ZERO,
-    log_sum_exp,
-    normalize_log_probs_axis,
-    safe_exp,
-    safe_log,
-)
+from ..utils.math_utils import EPSILON, LOG_ZERO, normalize_log_probs_axis, safe_exp, safe_log
 
 
 def forward_algorithm(
@@ -41,17 +35,12 @@ def forward_algorithm(
     # Initial step: π_i * b_i(o_1)
     log_forward[0] = log_start_probs + log_emission_probs[0]
 
-    # Forward recursion
     for t in range(1, T):
-        for j in range(n_states):
-            # Sum over all previous states
-            log_forward[t, j] = (
-                log_sum_exp(log_forward[t - 1] + log_transition_probs[:, j])
-                + log_emission_probs[t, j]
-            )
+        transition_scores = log_forward[t - 1][:, np.newaxis] + log_transition_probs
+        log_forward[t] = logsumexp(transition_scores, axis=0) + log_emission_probs[t]
 
     # Compute log-likelihood
-    log_likelihood = log_sum_exp(log_forward[T - 1])
+    log_likelihood = logsumexp(log_forward[T - 1])
 
     return log_forward, log_likelihood
 
@@ -79,13 +68,8 @@ def backward_algorithm(
 
     # Backward recursion
     for t in range(T - 2, -1, -1):
-        for i in range(n_states):
-            # Sum over all next states
-            log_backward[t, i] = log_sum_exp(
-                log_transition_probs[i]
-                + log_emission_probs[t + 1]
-                + log_backward[t + 1]
-            )
+        next_scores = log_transition_probs + log_emission_probs[t + 1] + log_backward[t + 1]
+        log_backward[t] = logsumexp(next_scores, axis=1)
 
     return log_backward
 
@@ -117,15 +101,10 @@ def viterbi_algorithm(
 
     # Forward pass
     for t in range(1, T):
-        for j in range(n_states):
-            # Find most likely previous state
-            transition_scores = log_viterbi[t - 1] + log_transition_probs[:, j]
-            best_prev_state = np.argmax(transition_scores)
+        transition_scores = log_viterbi[t - 1][:, np.newaxis] + log_transition_probs
 
-            log_viterbi[t, j] = (
-                transition_scores[best_prev_state] + log_emission_probs[t, j]
-            )
-            path[t, j] = best_prev_state
+        path[t] = np.argmax(transition_scores, axis=0)
+        log_viterbi[t] = np.max(transition_scores, axis=0) + log_emission_probs[t]
 
     # Find best final state
     best_final_state = np.argmax(log_viterbi[T - 1])
@@ -172,16 +151,13 @@ def forward_backward_algorithm(
     # Compute xi (posterior transition probabilities)
     log_xi = np.full((T - 1, n_states, n_states), LOG_ZERO, dtype=np.float64)
 
-    for t in range(T - 1):
-        for i in range(n_states):
-            for j in range(n_states):
-                log_xi[t, i, j] = (
-                    log_forward[t, i]
-                    + log_transition_probs[i, j]
-                    + log_emission_probs[t + 1, j]
-                    + log_backward[t + 1, j]
-                    - log_likelihood
-                )
+    log_xi = (
+        log_forward[:-1, :, np.newaxis]
+        + log_transition_probs[np.newaxis, :, :]
+        + log_emission_probs[1:, np.newaxis, :]
+        + log_backward[1:, np.newaxis, :]
+        - log_likelihood
+    )
 
     return safe_exp(log_gamma), safe_exp(log_xi), log_likelihood
 

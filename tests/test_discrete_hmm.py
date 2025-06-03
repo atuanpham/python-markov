@@ -563,10 +563,8 @@ class TestDiscreteHMMIntegration:
         # Check that training improved likelihood
         assert len(test_hmm.log_likelihood_history_) > 0
         if len(test_hmm.log_likelihood_history_) > 1:
-            assert (
-                test_hmm.log_likelihood_history_[-1]
-                >= test_hmm.log_likelihood_history_[0] - 1e-6
-            )
+            log_likelyhood_0 = test_hmm.log_likelihood_history_[0] - 1e-6
+            assert test_hmm.log_likelihood_history_[-1] >= log_likelyhood_0
 
         # Test model works on test data
         test_seq = sequences[0][:5]  # First 5 observations

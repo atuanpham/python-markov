@@ -2,10 +2,9 @@
 Tests for mathematical utilities module.
 """
 
-import warnings
-
 import numpy as np
 import pytest
+from scipy.special import logsumexp
 
 from markov.utils.math_utils import (
     EPSILON,
@@ -14,8 +13,6 @@ from markov.utils.math_utils import (
     check_probability_matrix,
     log_dot_product,
     log_likelihood_change,
-    log_sum_exp,
-    log_sum_exp_axis,
     make_stochastic,
     normalize_log_probs,
     normalize_log_probs_axis,
@@ -24,105 +21,6 @@ from markov.utils.math_utils import (
     safe_log,
     weighted_average,
 )
-
-
-class TestLogSumExp:
-    """Tests for log_sum_exp function."""
-
-    def test_empty_array(self):
-        """Test log_sum_exp with empty array."""
-        result = log_sum_exp(np.array([]))
-        assert result == LOG_ZERO
-
-    def test_single_value(self):
-        """Test log_sum_exp with single value."""
-        x = 2.5
-        result = log_sum_exp(np.array([x]))
-        assert np.isclose(result, x)
-
-    def test_two_values(self):
-        """Test log_sum_exp with two values."""
-        x1, x2 = 1.0, 2.0
-        expected = np.log(np.exp(x1) + np.exp(x2))
-        result = log_sum_exp(np.array([x1, x2]))
-        assert np.isclose(result, expected)
-
-    def test_all_zero_log_probs(self):
-        """Test with all -inf (zero probabilities)."""
-        log_probs = np.array([LOG_ZERO, LOG_ZERO, LOG_ZERO])
-        result = log_sum_exp(log_probs)
-        assert result == LOG_ZERO
-
-    def test_numerical_stability(self):
-        """Test numerically challenging case."""
-        # Large values that would overflow without stability measures
-        log_probs = np.array([1000.0, 1001.0, 999.0])
-        result = log_sum_exp(log_probs)
-
-        # Should not be inf or nan
-        assert np.isfinite(result)
-
-        # Should be dominated by largest value
-        assert result > 1001.0
-
-    def test_mixed_finite_infinite(self):
-        """Test mix of finite and -inf values."""
-        log_probs = np.array([1.0, LOG_ZERO, 2.0, LOG_ZERO])
-        expected = np.log(np.exp(1.0) + np.exp(2.0))
-        result = log_sum_exp(log_probs)
-        assert np.isclose(result, expected)
-
-    def test_warning_on_large_values(self):
-        """Test warning is issued for very large values."""
-        log_probs = np.array([800.0, 801.0])
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            log_sum_exp(log_probs)
-            assert len(w) == 1
-            assert "Large log probabilities" in str(w[0].message)
-
-
-class TestLogSumExpAxis:
-    """Tests for log_sum_exp_axis function."""
-
-    def test_2d_array_axis_0(self):
-        """Test log_sum_exp along axis 0."""
-        log_probs = np.array([[1.0, 2.0], [3.0, 4.0]])
-        result = log_sum_exp_axis(log_probs, axis=0)
-
-        expected = np.array(
-            [log_sum_exp(np.array([1.0, 3.0])), log_sum_exp(np.array([2.0, 4.0]))]
-        )
-
-        assert np.allclose(result, expected)
-
-    def test_2d_array_axis_1(self):
-        """Test log_sum_exp along axis 1."""
-        log_probs = np.array([[1.0, 2.0], [3.0, 4.0]])
-        result = log_sum_exp_axis(log_probs, axis=1)
-
-        expected = np.array(
-            [log_sum_exp(np.array([1.0, 2.0])), log_sum_exp(np.array([3.0, 4.0]))]
-        )
-
-        assert np.allclose(result, expected)
-
-    def test_with_infinite_values(self):
-        """Test handling of -inf values."""
-        log_probs = np.array([[LOG_ZERO, 1.0], [2.0, LOG_ZERO]])
-        result = log_sum_exp_axis(log_probs, axis=1)
-
-        expected = np.array([1.0, 2.0])
-        assert np.allclose(result, expected)
-
-    def test_all_infinite_row(self):
-        """Test row with all -inf values."""
-        log_probs = np.array([[LOG_ZERO, LOG_ZERO], [1.0, 2.0]])
-        result = log_sum_exp_axis(log_probs, axis=1)
-
-        assert result[0] == LOG_ZERO
-        assert np.isfinite(result[1])
 
 
 class TestNormalizeLogProbs:
@@ -416,7 +314,7 @@ class TestEdgeCases:
         """Test functions with empty arrays where applicable."""
         empty = np.array([])
 
-        assert log_sum_exp(empty) == LOG_ZERO
+        assert logsumexp(empty) == LOG_ZERO
 
         # Other functions should handle empty arrays gracefully
         result = safe_log(empty)
@@ -429,7 +327,7 @@ class TestEdgeCases:
         """Test functions with single-element arrays."""
         single = np.array([2.5])
 
-        assert np.isclose(log_sum_exp(single), 2.5)
+        assert np.isclose(logsumexp(single), 2.5)
         assert np.isclose(safe_log(np.exp(single[0])), single[0])
         assert np.isclose(safe_exp(single[0]), np.exp(single[0]))
 
