@@ -43,9 +43,7 @@ def validate_sequence(sequence: NDArray, n_observations: Optional[int] = None) -
             raise ValidationError("Discrete sequences must contain integers")
 
         if np.any((sequence < 0) | (sequence >= n_observations)):
-            raise ValidationError(
-                f"Observations must be in range [0, {n_observations-1}]"
-            )
+            raise ValidationError(f"Observations must be in range [0, {n_observations-1}]")
 
 
 def validate_sequences(
@@ -78,9 +76,7 @@ def validate_sequences(
     return validated
 
 
-def validate_probability_vector(
-    probs: NDArray[np.float64], name: str = "probabilities"
-) -> None:
+def validate_probability_vector(probs: NDArray[np.float64], name: str = "probabilities") -> None:
     """Validate probability vector sums to 1 and is non-negative."""
     if not isinstance(probs, np.ndarray):
         raise ValidationError(f"{name} must be numpy array")
@@ -134,8 +130,7 @@ def validate_hmm_parameters(
         validate_probability_matrix(emission_probs, axis=1, name="emission_probs")
         if emission_probs.shape[0] != n_states:
             raise IncompatibleShapeError(
-                f"emission_probs has {emission_probs.shape[0]} states, "
-                f"expected {n_states}"
+                f"emission_probs has {emission_probs.shape[0]} states, " f"expected {n_states}"
             )
 
 

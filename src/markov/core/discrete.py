@@ -8,12 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..exceptions import ModelNotFittedError
-from ..utils.math_utils import (
-    EPSILON,
-    make_stochastic,
-    random_stochastic_matrix,
-    safe_log,
-)
+from ..utils.math_utils import EPSILON, make_stochastic, random_stochastic_matrix, safe_log
 from ..utils.validation import (
     validate_n_observations,
     validate_n_states,
@@ -91,9 +86,7 @@ class DiscreteEmissionModel(EmissionModel):
 
         for t in range(T):
             for state in range(self.n_states):
-                log_emission_probs[t, state] = safe_log(
-                    self.emission_probs[state, sequence[t]]
-                )
+                log_emission_probs[t, state] = safe_log(self.emission_probs[state, sequence[t]])
 
         return log_emission_probs
 
@@ -188,9 +181,7 @@ class DiscreteHMM(BaseHMM):
         >>> log_prob = hmm.score(test_seq)
     """
 
-    def __init__(
-        self, n_states: int, n_observations: int, random_state: Optional[int] = None
-    ):
+    def __init__(self, n_states: int, n_observations: int, random_state: Optional[int] = None):
         """
         Initialize discrete HMM.
 

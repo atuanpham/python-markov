@@ -113,9 +113,7 @@ class TestValidateSequence:
         """Test discrete sequence specific validation."""
         # Non-integer values
         seq = np.array([0.5, 1.2, 2.8])
-        with pytest.raises(
-            ValidationError, match="Discrete sequences must contain integers"
-        ):
+        with pytest.raises(ValidationError, match="Discrete sequences must contain integers"):
             validate_sequence(seq, n_observations=3)
 
         # Out of range values
@@ -155,14 +153,10 @@ class TestValidateSequences:
 
     def test_invalid_type(self):
         """Test invalid sequence types."""
-        with pytest.raises(
-            ValidationError, match="Sequences must be list or numpy array"
-        ):
+        with pytest.raises(ValidationError, match="Sequences must be list or numpy array"):
             validate_sequences("invalid")
 
-        with pytest.raises(
-            ValidationError, match="Sequences must be list or numpy array"
-        ):
+        with pytest.raises(ValidationError, match="Sequences must be list or numpy array"):
             validate_sequences(123)
 
     def test_invalid_dimensions(self):
@@ -203,9 +197,7 @@ class TestValidateProbabilityVector:
     def test_invalid_dimensions(self):
         """Test invalid dimensions."""
         probs = np.array([[0.3, 0.7], [0.4, 0.6]])
-        with pytest.raises(
-            ValidationError, match="probabilities must be 1-dimensional"
-        ):
+        with pytest.raises(ValidationError, match="probabilities must be 1-dimensional"):
             validate_probability_vector(probs)
 
     def test_negative_values(self):
@@ -246,41 +238,31 @@ class TestValidateProbabilityMatrix:
 
     def test_invalid_type(self):
         """Test invalid types."""
-        with pytest.raises(
-            ValidationError, match="probability matrix must be numpy array"
-        ):
+        with pytest.raises(ValidationError, match="probability matrix must be numpy array"):
             validate_probability_matrix([[0.3, 0.7], [0.6, 0.4]])
 
     def test_invalid_dimensions(self):
         """Test invalid dimensions."""
         matrix = np.array([0.3, 0.7])  # 1D
-        with pytest.raises(
-            ValidationError, match="probability matrix must be 2-dimensional"
-        ):
+        with pytest.raises(ValidationError, match="probability matrix must be 2-dimensional"):
             validate_probability_matrix(matrix)
 
     def test_negative_values(self):
         """Test negative values."""
         matrix = np.array([[0.3, 0.7], [-0.1, 1.1]])
-        with pytest.raises(
-            ValidationError, match="probability matrix must be non-negative"
-        ):
+        with pytest.raises(ValidationError, match="probability matrix must be non-negative"):
             validate_probability_matrix(matrix)
 
     def test_not_sum_to_one(self):
         """Test rows/columns that don't sum to 1."""
         matrix = np.array([[0.3, 0.5], [0.6, 0.4]])  # first row sums to 0.8
-        with pytest.raises(
-            ValidationError, match="probability matrix rows/columns must sum to 1"
-        ):
+        with pytest.raises(ValidationError, match="probability matrix rows/columns must sum to 1"):
             validate_probability_matrix(matrix, axis=1)
 
     def test_custom_name(self):
         """Test custom parameter name in error messages."""
         matrix = np.array([[0.3, 0.5], [0.6, 0.4]])
-        with pytest.raises(
-            ValidationError, match="transition_matrix rows/columns must sum to 1"
-        ):
+        with pytest.raises(ValidationError, match="transition_matrix rows/columns must sum to 1"):
             validate_probability_matrix(matrix, axis=1, name="transition_matrix")
 
 
@@ -305,13 +287,9 @@ class TestValidateHMMParameters:
     def test_incompatible_transition_shape(self):
         """Test incompatible transition matrix shape."""
         start_probs = np.array([0.3, 0.7])  # 2 states
-        transition_probs = np.array(
-            [[0.5, 0.3, 0.2], [0.4, 0.3, 0.3], [0.2, 0.3, 0.5]]
-        )  # 3x3
+        transition_probs = np.array([[0.5, 0.3, 0.2], [0.4, 0.3, 0.3], [0.2, 0.3, 0.5]])  # 3x3
 
-        with pytest.raises(
-            IncompatibleShapeError, match="transition_probs shape.*incompatible"
-        ):
+        with pytest.raises(IncompatibleShapeError, match="transition_probs shape.*incompatible"):
             validate_hmm_parameters(start_probs, transition_probs)
 
     def test_incompatible_emission_shape(self):
@@ -320,9 +298,7 @@ class TestValidateHMMParameters:
         transition_probs = np.array([[0.8, 0.2], [0.4, 0.6]])
         emission_probs = np.array([[0.5, 0.5], [0.3, 0.7], [0.4, 0.6]])  # 3 states
 
-        with pytest.raises(
-            IncompatibleShapeError, match="emission_probs has 3 states, expected 2"
-        ):
+        with pytest.raises(IncompatibleShapeError, match="emission_probs has 3 states, expected 2"):
             validate_hmm_parameters(start_probs, transition_probs, emission_probs)
 
 
@@ -396,9 +372,7 @@ class TestCheckArrayFinite:
     def test_custom_name(self):
         """Test custom array name in error messages."""
         arr = np.array([1.0, np.inf, 3.0])
-        with pytest.raises(
-            ValidationError, match="probabilities contains non-finite values"
-        ):
+        with pytest.raises(ValidationError, match="probabilities contains non-finite values"):
             check_array_finite(arr, name="probabilities")
 
 

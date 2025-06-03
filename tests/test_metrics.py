@@ -295,10 +295,7 @@ class TestModelEvaluation:
 
         # Check test metrics
         test_metrics = result["test"]
-        assert all(
-            key in test_metrics
-            for key in ["log_likelihood", "aic", "bic", "perplexity"]
-        )
+        assert all(key in test_metrics for key in ["log_likelihood", "aic", "bic", "perplexity"])
 
         # Check model info
         model_info = result["model"]

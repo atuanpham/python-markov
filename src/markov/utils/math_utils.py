@@ -2,70 +2,16 @@
 Mathematical utilities for numerical stability in HMM computations.
 """
 
-import warnings
 from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.special import logsumexp
 
 # Constants for numerical stability
 LOG_ZERO = -np.inf
 EPSILON = 1e-12
 MAX_LOG_EXP = 700.0  # Prevents overflow in exp()
-
-
-def log_sum_exp(log_probs: NDArray[np.float64]) -> float:
-    """
-    Compute log(sum(exp(x))) in a numerically stable way.
-
-    Args:
-        log_probs: Array of log probabilities
-
-    Returns:
-        Log of sum of exponentials
-    """
-    if len(log_probs) == 0:
-        return LOG_ZERO
-
-    max_log = np.max(log_probs)
-
-    # Handle case where all probabilities are zero
-    if max_log == LOG_ZERO:
-        return LOG_ZERO
-
-    # Prevent overflow by subtracting max
-    if max_log > MAX_LOG_EXP:
-        warnings.warn("Large log probabilities detected, potential numerical issues")
-
-    return max_log + np.log(np.sum(np.exp(log_probs - max_log)))
-
-
-def log_sum_exp_axis(log_probs: NDArray[np.float64], axis: int) -> NDArray[np.float64]:
-    """
-    Compute log(sum(exp(x))) along specified axis in numerically stable way.
-
-    Args:
-        log_probs: Array of log probabilities
-        axis: Axis along which to compute
-
-    Returns:
-        Log of sum of exponentials along axis
-    """
-    max_log = np.max(log_probs, axis=axis, keepdims=True)
-
-    # Handle -inf values
-    inf_mask = np.isinf(max_log)
-    max_log = np.where(inf_mask, 0, max_log)
-
-    result = max_log.squeeze(axis) + np.log(
-        np.sum(np.exp(log_probs - max_log), axis=axis)
-    )
-
-    # Set -inf where all inputs were -inf
-    if np.any(inf_mask):
-        result = np.where(inf_mask.squeeze(axis), LOG_ZERO, result)
-
-    return result
 
 
 def normalize_log_probs(log_probs: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -78,7 +24,7 @@ def normalize_log_probs(log_probs: NDArray[np.float64]) -> NDArray[np.float64]:
     Returns:
         Normalized log probabilities
     """
-    log_sum = log_sum_exp(log_probs)
+    log_sum = logsumexp(log_probs)
     if log_sum == LOG_ZERO:
         # If all probabilities are zero, return uniform
         return np.full_like(log_probs, -np.log(len(log_probs)))
@@ -86,9 +32,7 @@ def normalize_log_probs(log_probs: NDArray[np.float64]) -> NDArray[np.float64]:
     return log_probs - log_sum
 
 
-def normalize_log_probs_axis(
-    log_probs: NDArray[np.float64], axis: int
-) -> NDArray[np.float64]:
+def normalize_log_probs_axis(log_probs: NDArray[np.float64], axis: int) -> NDArray[np.float64]:
     """
     Normalize log probabilities along specified axis.
 
@@ -99,7 +43,7 @@ def normalize_log_probs_axis(
     Returns:
         Normalized log probabilities
     """
-    log_sum = log_sum_exp_axis(log_probs, axis)
+    log_sum = logsumexp(log_probs, axis=axis)
     return log_probs - np.expand_dims(log_sum, axis)
 
 
@@ -133,9 +77,7 @@ def safe_exp(
     return np.exp(np.clip(log_x, -MAX_LOG_EXP, MAX_LOG_EXP))
 
 
-def log_dot_product(
-    log_A: NDArray[np.float64], log_B: NDArray[np.float64]
-) -> NDArray[np.float64]:
+def log_dot_product(log_A: NDArray[np.float64], log_B: NDArray[np.float64]) -> NDArray[np.float64]:
     """
     Compute log(A @ exp(B)) in numerically stable way.
 
@@ -156,7 +98,7 @@ def log_dot_product(
     log_products = log_A_expanded + log_B_expanded
 
     # Sum along middle dimension in log space
-    return log_sum_exp_axis(log_products, axis=1).squeeze()
+    return logsumexp(log_products, axis=1).squeeze()
 
 
 def check_probability_matrix(
@@ -238,9 +180,7 @@ def random_stochastic_matrix(
     return make_stochastic(matrix, axis=1)
 
 
-def weighted_average(
-    values: NDArray[np.float64], weights: NDArray[np.float64]
-) -> float:
+def weighted_average(values: NDArray[np.float64], weights: NDArray[np.float64]) -> float:
     """
     Compute weighted average with numerical stability.
 
